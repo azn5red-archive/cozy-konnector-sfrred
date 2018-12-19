@@ -9,7 +9,7 @@ const {
 const request = requestFactory({
   // the debug mode shows all the details about http request and responses. Very usefull for
   // debugging but very verbose. That is why it is commented out by default
-    debug: true,
+    debug: false,
   // activates [cheerio](https://cheerio.js.org/) parsing on each page
   cheerio: true,
   // If cheerio is activated do not forget to deactivate json parsing (which is activated by
@@ -63,7 +63,6 @@ function authenticate(username, password) {
     validate: statusCode => {
       // The login in toscrape.com always works excepted when no password is set
       //log('info', statusCode)
-	console.log(statusCode)
       return statusCode === 200 || log('error', 'Invalid credentials')
       // cozy-konnector-libs has its own logging function which format these logs with colors in
       // standalone and dev mode and as JSON in production mode
@@ -79,32 +78,32 @@ function parseDocuments($) {
   // you can find documentation about the scrape function here :
   // https://github.com/konnectors/libs/blob/master/packages/cozy-konnector-libs/docs/api.md#scrape
   // TODO : Convertir le lien de la "facturette" par "telecharger"
-  console.log("PRINT")
-  console.log($(".sr-chevron"))
+  // console.log($(".sr-chevron"))
+  console.log($(".sr-container-content"))
   const docs = scrape(
-    $,
+    $("#tab"),
     
     {
       title: {
         sel: '.sr-text-grey-14',
-        attr: 'title'
+        attr: 'span'
       },
       amount: {
         sel: '.sr-text-18B',
         parse: normalizePrice
       },
       fileurl: {
-        sel: 'sr-chevron',
+        sel: 'a',
         attr: 'href',
-//        parse: href
+        parse: convertToDownloadLink
       },
       filename: {
         sel: 'h3 a',
         attr: 'title',
 //        parse: title => `${title}.jpg`
-      }
+      },
     },
-    'article'
+    // '.sr-container-content'
   )
   console.log(docs[0])
   return docs.map(doc => ({
@@ -113,7 +112,7 @@ function parseDocuments($) {
     // even if it is a little artificial here (these are not real bills)
     date: new Date(),
     currency: '€',
-    vendor: 'template',
+    vendor: 'SFR Red',
     metadata: {
       // it can be interesting that we add the date of import. This is not mandatory but may be
       // usefull for debugging or data migration
@@ -128,3 +127,9 @@ function parseDocuments($) {
 function normalizePrice(price) {
   return parseFloat(price.replace('£', '').trim())
 }
+
+// Convert href to download link
+function convertToDownloadLink(link) {
+  return ("https://espace-client-red.sfr.fr" + link.replace("facturette", "telecharger") + ".pdf")
+}
+
