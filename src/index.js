@@ -47,13 +47,24 @@ function authenticate(username, password) {
 }
 
 function parseDocuments($) {
- let docs = []
+  let docs = []
 
-// First invoice
-  const firstInvDate = deleteWhitespaces($('span').has('span').first().children().first().text())
-  const firstInvAmount = deleteWhitespaces($('[class=sr-text-25B]').first().text())
+  // First invoice
+  const firstInvDate = deleteWhitespaces(
+    $('span')
+      .has('span')
+      .first()
+      .children()
+      .first()
+      .text()
+  )
+  const firstInvAmount = deleteWhitespaces(
+    $('[class=sr-text-25B]')
+      .first()
+      .text()
+  )
 
-// Scraping
+  // Scraping
   $('[target=_blank]').each((i, el) => {
     let doc = {}
     let filename = deleteWhitespaces(
@@ -117,5 +128,5 @@ function findCurrency(str) {
 }
 
 function parseDate(str) {
-  return new Date(str.replace( /(\d{2})\/(\d{2})\/(\d{4})/, "$2/$1/$3"))
+  return new Date(str.replace(/(\d{2})\/(\d{2})\/(\d{4})/, '$2/$1/$3'))
 }
