@@ -47,10 +47,16 @@ function authenticate(username, password) {
 }
 
 function parseDocuments($) {
-  let docs = []
+ let docs = []
+
+// First invoice
+  const firstInvDate = deleteWhitespaces($('span').has('span').first().children().first().text())
+  const firstInvAmount = deleteWhitespaces($('[class=sr-text-25B]').first().text())
+
+// Scraping
   $('[target=_blank]').each((i, el) => {
     let doc = {}
-    const filename = deleteWhitespaces(
+    let filename = deleteWhitespaces(
       $(el)
         .children()
         .first()
@@ -60,7 +66,7 @@ function parseDocuments($) {
         .first()
         .text()
     )
-    const amount = deleteWhitespaces(
+    let amount = deleteWhitespaces(
       $(el)
         .children()
         .last()
@@ -70,18 +76,21 @@ function parseDocuments($) {
         .first()
         .text()
     )
+    filename = filename ? filename : 'Abonnement-' + firstInvDate
+    amount = amount ? amount : firstInvAmount
     doc.fileurl = convertToDownloadLink($(el).attr('href'))
     doc.filename = filename + '.pdf'
-    doc.date = filename.split('-')[1]
-    doc.amount = amount.slice(0, -1)
+    doc.date = parseDate(filename.split('-')[1])
+    doc.amount = parseFloat(amount.slice(0, -1))
     doc.currency = findCurrency(amount)
+    doc.vendor = 'SFR Red'
     doc.metadata = {
       importDate: new Date(),
       version: 1
     }
-//    console.log(doc)
     docs.push(doc)
   })
+
   return docs
 }
 
@@ -89,8 +98,8 @@ function parseDocuments($) {
 function convertToDownloadLink(link) {
   return link
     ? 'https://espace-client-red.sfr.fr' +
-      link.replace('facturette', 'telecharger') +
-      '.pdf'
+        link.replace('facturette', 'telecharger') +
+        '.pdf'
     : link
 }
 
@@ -105,4 +114,8 @@ function findCurrency(str) {
       return 'EUR'
   }
   return ''
+}
+
+function parseDate(str) {
+  return new Date(str.replace( /(\d{2})\/(\d{2})\/(\d{4})/, "$2/$1/$3"))
 }
